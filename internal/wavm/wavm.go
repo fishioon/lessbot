@@ -58,12 +58,12 @@ func (e *Engine) Execute(moduleName, req string) (string, error) {
 	return "", nil
 }
 
-func (e *Engine) Call(moduleName string, a, b int) int {
+func (e *Engine) Call(moduleName string, req []byte) ([]byte, error) {
 	fn, ok := e.funcs[moduleName]
 	if !ok {
-		return 0
+		return nil, fmt.Errorf("invalid module %s", moduleName)
 	}
-	args := make([]C.wasm_val_t, 2)
+	args := make([]C.wasm_val_t, 3)
 	args[0] = C.wasm_val_t{byte(a)}
 	args[1] = C.wasm_val_t{byte(b)}
 	results := make([]C.wasm_val_t, 1)
