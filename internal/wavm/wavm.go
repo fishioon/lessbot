@@ -3,9 +3,19 @@ package wavm
 // #cgo CFLAGS: -I/usr/local/include/
 // #cgo LDFLAGS: -L/usr/local/lib/ -lWAVM
 // #include "WAVM/wavm-c/wavm-c.h"
+// int lessbot_call(wasm_store_t* store, wasm_func_t* fn, const char* src, int slen, char *dst) {
+// 	wasm_val_t args[3];
+// 	wasm_val_t results[1];
+// 	args[0].i32 = *((int*)src);
+// 	args[1].i32 = slen;
+// 	args[2].i32 = 1024;
+// 	wasm_func_call(store, fn, args, results);
+// 	return results[0].i32;
+// }
 import "C"
 import (
 	"fmt"
+	"unsafe"
 )
 
 type Engine struct {
@@ -47,26 +57,12 @@ func (e *Engine) LoadModule(moduleName, funcName string, code []byte) error {
 	return nil
 }
 
-func (e *Engine) Execute(moduleName, req string) (string, error) {
-	fn, ok := e.funcs[moduleName]
-	if !ok {
-		return "", fmt.Errorf("module %s not found", moduleName)
-	}
-	args := make([]C.wasm_val_t, 1)
-	results := make([]C.wasm_val_t, 1)
-	C.wasm_func_call(e.store, fn, &args[0], &results[0])
-	return "", nil
-}
-
 func (e *Engine) Call(moduleName string, req []byte) ([]byte, error) {
 	fn, ok := e.funcs[moduleName]
 	if !ok {
 		return nil, fmt.Errorf("invalid module %s", moduleName)
 	}
-	args := make([]C.wasm_val_t, 3)
-	args[0] = C.wasm_val_t{byte(a)}
-	args[1] = C.wasm_val_t{byte(b)}
-	results := make([]C.wasm_val_t, 1)
-	C.wasm_func_call(e.store, fn, &args[0], &results[0])
-	return int(results[0][0])
+	buf := make([]byte, 1024)
+	ret := C.lessbot_call(e.store, fn, (*C.char)(unsafe.Pointer(&req[0])), C.int(len(req)), (*C.char)(unsafe.Pointer(&buf[0])))
+	return buf[:ret], nil
 }

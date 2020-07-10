@@ -6,14 +6,6 @@ import (
 	"testing"
 )
 
-const (
-	echoFunc = `(module
-  (func (export "run") (param i32) (result i32)
-    (call $1 (local.get 0))
-  )
-);`
-)
-
 func TestWAVM(t *testing.T) {
 	rawModule, err := ioutil.ReadFile("sum.wasm")
 	if err != nil {
@@ -21,6 +13,6 @@ func TestWAVM(t *testing.T) {
 	}
 	engine := NewEngine()
 	engine.LoadModule("echo", "sum", rawModule)
-	res := engine.Call("echo", 2, 3)
+	res, _ := engine.Call("echo", []byte("hello"))
 	log.Print(res)
 }
