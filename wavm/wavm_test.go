@@ -7,12 +7,12 @@ import (
 )
 
 func TestWAVM(t *testing.T) {
-	rawModule, err := ioutil.ReadFile("sum.wasm")
+	rawModule, err := ioutil.ReadFile("hello.wasm")
 	if err != nil {
 		panic(err)
 	}
 	engine := NewEngine()
-	engine.LoadModule("echo", "sum", rawModule)
-	res, _ := engine.Call("echo", []byte("hello"))
+	engine.LoadModule("echo", rawModule)
+	res, _ := engine.Call("echo", "hello")
 	log.Print(res)
 }
