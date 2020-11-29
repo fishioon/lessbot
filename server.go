@@ -1,4 +1,4 @@
-package lessbot
+package main
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fishioon/lessbot/internal/wxbiz"
+	"github.com/fishioon/lessbot/wxbiz"
 )
 
 var (
@@ -23,10 +23,17 @@ type YoErr struct {
 	Message string
 }
 
+type BotConfig struct {
+	AppID  string `json:"appid"`
+	Secret string `json:"secret"`
+	Master string `json:"master"`
+	Code   string `json:"code"`
+}
+
 type Bot struct {
-	AppID     string
-	AppSecret string
-	wx        *wxbiz.Wxbiz
+	bc *BotConfig
+	wx *wxbiz.Wxbiz
+	wb *WasmBot
 }
 
 func (e *YoErr) Error() string {
@@ -42,7 +49,7 @@ type Server struct {
 	bots map[string]*Bot
 }
 
-func NewServer() (*Server, error) {
+func NewBotServer() (*Server, error) {
 	s := &Server{
 		mux: http.NewServeMux(),
 	}
@@ -63,6 +70,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) init() {
 	// init all bots
+	// loadBots()
 
 	s.mux.HandleFunc("/wxbot/listen/", s.handleListen)
 }
@@ -100,7 +108,7 @@ func (s *Server) handleListen(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid msg", http.StatusBadRequest)
 		return
 	}
-	reply, err := s.botExec(bot, []byte(recv))
+	reply, err := bot.wb.Lessbot(recv)
 	if err != nil {
 		log.Printf("Error parse msg: %v", err)
 		http.Error(w, "invalid msg", http.StatusBadRequest)
@@ -118,6 +126,13 @@ func (s *Server) handleListen(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(res))
 }
 
-func (s *Server) botExec(bot *Bot, msg []byte) ([]byte, error) {
-	return nil, nil
+func (s *Server) loadBot(bc *BotConfig) (*Bot, error) {
+	wb, err := LoadWasm(bc.Code)
+	if err != nil {
+		return nil, err
+	}
+	return &Bot{
+		bc: bc,
+		wb: wb,
+	}, nil
 }

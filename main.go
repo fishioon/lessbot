@@ -8,19 +8,12 @@ import (
 	"net/http"
 	"os"
 	"runtime"
-
-	"github.com/fishioon/lessbot/internal/lessbot"
 )
 
 var (
 	Version, Build string
 	conf           *Config
 )
-
-type RedisOption struct {
-	Addr     string `json:"addr"`
-	Password string `json:"password"`
-}
 
 type Config struct {
 	Host   string `json:"host"`
@@ -49,7 +42,7 @@ func main() {
 		return
 	}
 	loadConfig(*confile)
-	s, err := lessbot.NewServer()
+	s, err := NewBotServer()
 	if err != nil {
 		log.Fatalf("Error creating server: %v", err)
 	}
